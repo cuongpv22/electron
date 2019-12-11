@@ -7,24 +7,46 @@ function initMap() {
 
   // Create the search box and link it to the UI element.
   var input = document.getElementById('pac-input');
+ 
+  var defaultBounds = new google.maps.LatLngBounds(
+    new google.maps.LatLng(21.012414,105.811143),
+    new google.maps.LatLng(21.012414,105.811143));
+    
+    
+
+  // var options = {
+  //   bounds: defaultBounds,
+  //   types: ['establishment']
+  // };
+  
+  // autocomplete = new google.maps.places.Autocomplete(input, options);
   var searchBox = new google.maps.places.SearchBox(input);
   map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
 
+  var geocoder = new google.maps.Geocoder();
+
   // Bias the SearchBox results towards current map's viewport.
   map.addListener('bounds_changed', function() {
-    searchBox.setBounds(map.getBounds());
+    var address = document.getElementById('current-location').value;
+    // searchBox.setBounds(map.getBounds());
+    geocodeAddress(geocoder,map,address);  
+    searchBox.setBounds(defaultBounds);
   });
+  
 
   var markers = [];
   // Listen for the event fired when the user selects a prediction and retrieve
   // more details for that place.
+  
   searchBox.addListener('places_changed', function() {
-    var places = searchBox.getPlaces();
 
+    
+    
+    var places = searchBox.getPlaces();
+   
     if (places.length == 0) {
       return;
     }
-
     // Clear out the old markers.
     markers.forEach(function(marker) {
       marker.setMap(null);
@@ -62,6 +84,25 @@ function initMap() {
       }
     });
     map.fitBounds(bounds);
+  });
+}
+
+function geocodeAddress(geocoder, resultsMap,address) {
+  geocoder.geocode({'address': address  }, function(results, status) {
+    if (status === 'OK') {
+      resultsMap.setCenter(results[0].geometry.location);
+      var latCurrent = results[0].geometry.location.lat
+      console.log(latCurrent);
+      //  defaultBounds = new google.maps.LatLngBounds(
+      //   new google.maps.LatLng(21.012414,105.811143),
+      //   new google.maps.LatLng(21.012414,105.811143));
+       marker = new google.maps.Marker({
+        map: resultsMap,
+        position: results[0].geometry.location
+      });
+    } else {
+      alert('Geocode was not successful for the following reason: ' + status);
+    }
   });
 }
 function toggleBounce() {
